@@ -53,6 +53,13 @@ class Board:
         for row in self.board:
             board_str += " ".join(str(piece).ljust(2) if piece else "  " for piece in row) + "\n"
         return board_str
+    
+    def is_valid_move(self, start_row, start_col, end_row, end_col):
+        """Vérifie si le coup donné est à l'intérieur des limites de l'échiquier."""
+        if 0 <= start_row < 8 and 0 <= start_col < 8 and \
+           0 <= end_row < 8 and 0 <= end_col < 8:
+            return True
+        return False
 
 if __name__ == "__main__":
     board = Board()
