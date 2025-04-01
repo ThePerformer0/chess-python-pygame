@@ -87,8 +87,6 @@ L'IA utilise plusieurs stratégies pour jouer :
 - Détection de l'échec
 - Détection de l'échec et mat
 
-[Ajouter une image montrant une situation d'échec et mat]
-
 ## Contribution
 Les contributions sont les bienvenues ! N'hésitez pas à :
 1. Fork le projet
