@@ -41,14 +41,16 @@ Un jeu d'échecs complet développé en Python avec Pygame, offrant la possibili
 
 ## Structure du projet
 
+```
 chess-python-pygame/
-├── main.py # Point d'entrée du programme
-├── board.py # Gestion du plateau de jeu
-├── pieces.py # Définition des pièces et leurs mouvements
-├── gui.py # Interface graphique
-├── ai.py # Intelligence artificielle
-├── assets/ # Ressources graphiques
-└── README.md # Documentation
+├── main.py       # Point d'entrée du programme
+├── board.py      # Gestion du plateau de jeu
+├── pieces.py     # Définition des pièces et leurs mouvements
+├── gui.py        # Interface graphique
+├── ai.py         # Intelligence artificielle
+├── assets/       # Ressources graphiques
+└── README.md     # Documentation
+```
 
 ## Configuration des Images
 Les images des pièces doivent être placées dans le dossier `assets/` avec la nomenclature suivante :
