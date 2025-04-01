@@ -215,10 +215,9 @@ class MenuPrincipal:
 class GUI:
     def __init__(self, mode_jeu):
         self.TAILLE_CASE = 80
-        self.LARGEUR = self.TAILLE_CASE * 8
+        self.LARGEUR = self.TAILLE_CASE * 8 + 300  # +300 pour le panneau latéral
         self.HAUTEUR = self.TAILLE_CASE * 8
         
-        # Redimensionner la fenêtre pour le jeu
         self.screen = pygame.display.set_mode((self.LARGEUR, self.HAUTEUR))
         pygame.display.set_caption("Jeu d'Échecs")
         
@@ -227,10 +226,27 @@ class GUI:
         self.MARRON = (181, 136, 99)
         self.SURBRILLANCE = (186, 202, 68)
         self.ROUGE = (255, 0, 0)
+        self.NOIR = (0, 0, 0)
+        self.GRIS = (128, 128, 128)
+        
+        # Police
+        self.font_titre = pygame.font.Font(None, 36)
+        self.font_texte = pygame.font.Font(None, 24)
         
         # Initialisation du jeu
         self.game = Game(mode_jeu)
         self.charger_images()
+        
+        # Variables pour le panneau latéral
+        self.temps_debut = time.time()
+        self.temps_blanc = 0
+        self.temps_noir = 0
+        self.coups_blanc = 0
+        self.coups_noir = 0
+        
+        # Variables pour l'animation de fin de partie
+        self.animation_alpha = 0
+        self.animation_active = False
         
         # Variables pour la sélection des pièces
         self.case_selectionnee = None
@@ -304,12 +320,18 @@ class GUI:
                 self.case_selectionnee = case
                 piece = self.game.board.obtenir_piece(case)
                 self.mouvements_possibles = piece.mouvements_valides(self.game.board.board)
+                return False  # Pas encore de mouvement effectué
         else:
             # Déplacement d'une pièce
             if case in self.mouvements_possibles:
-                self.game.deplacer_piece(case)
+                if self.game.deplacer_piece(case):  # Vérifie si le déplacement a réussi
+                    self.case_selectionnee = None
+                    self.mouvements_possibles = []
+                    return True  # Mouvement effectué avec succès
             self.case_selectionnee = None
             self.mouvements_possibles = []
+            return False  # Mouvement non effectué
+        return False
     
     def afficher_statut_partie(self):
         """Affiche le statut de la partie (échec, échec et mat)"""
@@ -341,18 +363,98 @@ class GUI:
             self.screen.blit(texte, (20, y_offset + 5))
             y_offset += texte.get_height() + 15
             
+    def dessiner_panneau_lateral(self):
+        """Dessine le panneau d'informations à droite"""
+        # Position de début du panneau
+        x_debut = self.TAILLE_CASE * 8 + 20
+        y = 20
+        
+        # Fond du panneau
+        pygame.draw.rect(self.screen, self.BLANC, 
+                        (x_debut, 0, 280, self.HAUTEUR))
+        
+        # Temps de jeu
+        temps_actuel = time.time() - self.temps_debut
+        if not self.game.partie_terminee:  # Ne met à jour le temps que si la partie n'est pas terminée
+            if self.game.tour_blanc:
+                self.temps_blanc = temps_actuel - self.temps_noir
+            else:
+                self.temps_noir = temps_actuel - self.temps_blanc
+        
+        # Formater le temps en minutes:secondes
+        temps_blanc_format = f"{int(self.temps_blanc//60):02d}:{int(self.temps_blanc%60):02d}"
+        temps_noir_format = f"{int(self.temps_noir//60):02d}:{int(self.temps_noir%60):02d}"
+        
+        # Affichage des informations
+        titres = [
+            f"Tour : {'Blanc' if self.game.tour_blanc else 'Noir'}",
+            f"Temps Blanc : {temps_blanc_format}",
+            f"Temps Noir : {temps_noir_format}",
+            f"Coups Blanc : {self.coups_blanc}",
+            f"Coups Noir : {self.coups_noir}"
+        ]
+        
+        for titre in titres:
+            texte = self.font_titre.render(titre, True, self.NOIR)
+            self.screen.blit(texte, (x_debut, y))
+            y += 40
+
+    def afficher_message_victoire(self):
+        """Affiche un message de victoire avec animation"""
+        if not self.animation_active:
+            return
+            
+        # Surface semi-transparente sur tout l'écran
+        overlay = pygame.Surface((self.LARGEUR, self.HAUTEUR))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(min(self.animation_alpha, 128))
+        self.screen.blit(overlay, (0, 0))
+        
+        # Message de victoire
+        gagnant = "Blanc" if not self.game.tour_blanc else "Noir"
+        message = f"ÉCHEC ET MAT ! {gagnant} gagne la partie !"
+        texte = self.font_titre.render(message, True, self.ROUGE)
+        rect_texte = texte.get_rect(center=(self.LARGEUR//2, self.HAUTEUR//2))
+        
+        # Fond blanc pour le texte
+        fond = pygame.Surface((rect_texte.width + 40, rect_texte.height + 20))
+        fond.fill(self.BLANC)
+        fond.set_alpha(min(self.animation_alpha, 255))
+        fond_rect = fond.get_rect(center=(self.LARGEUR//2, self.HAUTEUR//2))
+        
+        self.screen.blit(fond, fond_rect)
+        self.screen.blit(texte, rect_texte)
+        
+        # Animation progressive
+        if self.animation_alpha < 255:
+            self.animation_alpha += 5
+
     def run(self):
         running = True
         clock = pygame.time.Clock()
         dernier_mouvement_ia = 0
+        temps_debut_tour = time.time()  # Ajout du temps de début de tour
         
         while running:
             temps_actuel = time.time()
             
-            # Faire jouer l'IA si c'est son tour et si assez de temps s'est écoulé
+            # Faire jouer l'IA si c'est son tour
             if (not self.game.partie_terminee and 
                 temps_actuel - dernier_mouvement_ia >= self.DELAI_IA):
                 if self.game.jouer_tour_ia():
+                    # Mettre à jour les temps
+                    temps_tour = temps_actuel - temps_debut_tour
+                    if self.game.tour_blanc:
+                        self.temps_noir += temps_tour
+                    else:
+                        self.temps_blanc += temps_tour
+                    temps_debut_tour = temps_actuel
+                    
+                    # Incrémenter le compteur de coups pour l'IA
+                    if self.game.tour_blanc:
+                        self.coups_noir += 1
+                    else:
+                        self.coups_blanc += 1
                     dernier_mouvement_ia = temps_actuel
             
             for event in pygame.event.get():
@@ -363,17 +465,40 @@ class GUI:
                         if not (self.game.ia and 
                                ((self.game.tour_blanc and self.game.ia.couleur == 'blanc') or 
                                 (not self.game.tour_blanc and self.game.ia.couleur == 'noir'))):
-                            self.gerer_clic(event.pos)
+                            if self.gerer_clic(event.pos):
+                                # Mettre à jour les temps
+                                temps_tour = temps_actuel - temps_debut_tour
+                                if self.game.tour_blanc:
+                                    self.temps_noir += temps_tour
+                                else:
+                                    self.temps_blanc += temps_tour
+                                temps_debut_tour = temps_actuel
+                                
+                                # Incrémenter le compteur de coups
+                                if self.game.tour_blanc:
+                                    self.coups_noir += 1
+                                else:
+                                    self.coups_blanc += 1
+                
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_r:  # Touche R pour recommencer
-                        self.game = Game(self.game.mode_jeu)
-                        dernier_mouvement_ia = 0
+                        self.__init__(self.game.mode_jeu)
+                        temps_debut_tour = time.time()
             
             # Mise à jour de l'affichage
             self.dessiner_plateau()
             self.dessiner_surbrillance()
             self.dessiner_pieces()
-            self.afficher_statut_partie()
+            self.dessiner_panneau_lateral()
+            
+            # Activer l'animation de fin si la partie est terminée
+            if self.game.partie_terminee and not self.animation_active:
+                self.animation_active = True
+            
+            # Afficher le message de victoire si nécessaire
+            if self.animation_active:
+                self.afficher_message_victoire()
+            
             pygame.display.flip()
             clock.tick(60)
         

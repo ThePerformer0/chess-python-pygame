@@ -3,7 +3,7 @@
 ## Description
 Un jeu d'échecs complet développé en Python avec Pygame, offrant la possibilité de jouer contre un autre joueur ou contre une IA. Le jeu implémente toutes les règles officielles des échecs, y compris les mouvements spéciaux comme le roque, la prise en passant et la promotion des pions.
 
-![Menu Principal](assets/Menu-principal.png)
+![Menu Principal](assets/Menu-principal.PNG)
 
 ## Fonctionnalités
 - Interface graphique complète avec menu principal
@@ -15,7 +15,7 @@ Un jeu d'échecs complet développé en Python avec Pygame, offrant la possibili
 - Indication des mouvements possibles
 - Détection des situations d'échec et mat
 
-![Plateau de jeu](assets/plateau_de_jeu.png)
+![Plateau de jeu](assets/plateau_de_jeu.PNG)
 
 ## Prérequis
 - Python 3.x
@@ -75,11 +75,44 @@ Les images des pièces doivent être placées dans le dossier `assets/` avec la 
 - **Molette souris** : Faire défiler le menu d'aide
 
 ## Fonctionnalités de l'IA
-L'IA utilise plusieurs stratégies pour jouer :
-- Évaluation de la valeur des pièces
-- Analyse des positions
-- Priorisation des captures avantageuses
-- Bonus pour le contrôle du centre
+L'IA utilise plusieurs stratégies avancées pour jouer :
+
+### Algorithme Principal
+- Utilisation de l'algorithme Minimax avec élagage Alpha-Beta
+- Profondeur de recherche configurable (actuellement réglée à 3 coups d'avance)
+- Optimisation des performances grâce à l'élagage des branches non prometteuses
+
+### Système d'Évaluation des Positions
+1. **Valeur des Pièces**
+   - Pion : 100 points
+   - Cavalier : 320 points
+   - Fou : 330 points
+   - Tour : 500 points
+   - Reine : 900 points
+   - Roi : 20000 points
+
+2. **Tables de Position**
+   - Bonus/Malus selon la position de chaque pièce sur l'échiquier
+   - Évaluation spécifique pour les pions et les cavaliers
+   - Adaptation des scores selon la couleur des pièces
+
+3. **Évaluation Stratégique**
+   - Analyse de la structure des pions
+   - Contrôle du centre de l'échiquier
+   - Sécurité du roi
+   - Mobilité des pièces
+
+### Optimisations
+- Élagage Alpha-Beta pour réduire le nombre de positions analysées
+- Gestion efficace de la mémoire
+- Évaluation dynamique des positions
+
+### Perspectives d'Amélioration
+L'IA pourrait être encore améliorée avec :
+- L'ajout de tables de position pour toutes les pièces
+- L'implémentation d'une bibliothèque d'ouvertures
+- L'augmentation de la profondeur de recherche
+- L'ajout d'une table de transposition
 
 ## Règles Implémentées
 - Mouvements standards de toutes les pièces
@@ -98,5 +131,5 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 5. Ouvrir une Pull Request
 
 ## Contact
-FEKE JIMMY - fekejimmy@gmail.com
-Lien du projet : https://github.com/ThePerformer0/chess-python-pygame
+- FEKE JIMMY - fekejimmy@gmail.com
+- Lien du projet : https://github.com/ThePerformer0/chess-python-pygame
