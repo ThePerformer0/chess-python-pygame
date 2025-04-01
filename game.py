@@ -1,15 +1,24 @@
 from board import Board
 from pieces import King, Pawn, Queen
+from ai import ChessAI
 
 class Game:
-    def __init__(self):
+    def __init__(self, mode_jeu="2joueurs"):
         self.board = Board()
         self.tour_blanc = True
         self.piece_selectionnee = None
         self.partie_terminee = False
         self.dernier_mouvement = None  # Pour la prise en passant
         self.en_echec = False
+        self.mode_jeu = mode_jeu
         
+        # Initialiser l'IA si nécessaire
+        self.ia = None
+        if mode_jeu == "ia_noir":
+            self.ia = ChessAI('noir')
+        elif mode_jeu == "ia_blanc":
+            self.ia = ChessAI('blanc')
+
     def selectionner_piece(self, position):
         piece = self.board.obtenir_piece(position)
         if piece and piece.couleur == ('blanc' if self.tour_blanc else 'noir'):
@@ -175,3 +184,14 @@ class Game:
         # Par défaut, on promeut en Dame
         couleur = 'blanc' if self.tour_blanc else 'noir'
         self.board.placer_piece(Queen(couleur, position), position)
+
+    def jouer_tour_ia(self):
+        """Fait jouer l'IA si c'est son tour"""
+        if self.ia and ((self.tour_blanc and self.ia.couleur == 'blanc') or 
+                       (not self.tour_blanc and self.ia.couleur == 'noir')):
+            depart, arrivee = self.ia.choisir_mouvement(self)
+            if depart and arrivee:
+                self.piece_selectionnee = depart
+                self.deplacer_piece(arrivee)
+                return True
+        return False
